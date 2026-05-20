@@ -1,31 +1,25 @@
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
-from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
-import os
-
-router   = APIRouter()
-pwd_ctx  = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-SECRET_KEY      = os.getenv("SECRET_KEY", "changeme-secret")
-ALGORITHM       = "HS256"
-ACCESS_EXPIRE   = 60 * 8   # 8 hours
-
-ADMIN_USERNAME  = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD  = os.getenv("ADMIN_PASSWORD", "admin123")
-
-
-def create_token(data: dict) -> str:
-    to_encode = data.copy()
-    expire    = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_EXPIRE)
-    to_encode["exp"] = expire
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-@router.post("/login")
-async def login(form: OAuth2PasswordRequestForm = Depends()):
-    if form.username != ADMIN_USERNAME or form.password != ADMIN_PASSWORD:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_token({"sub": form.username, "role": "admin"})
-    return {"access_token": token, "token_type": "bearer"}
+{
+  "name": "food-ordering-backend",
+  "version": "1.0.0",
+  "description": "REST API for the food ordering website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "test": "jest --detectOpenHandles"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.1",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}

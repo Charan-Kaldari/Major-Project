@@ -1,22 +1,26 @@
-from sqlalchemy import Column, Integer, String, DateTime, LargeBinary
-from sqlalchemy.orm import relationship
-from datetime import datetime, timezone
-from database import Base
+const mongoose = require("mongoose");
+const bcrypt   = require("bcryptjs");
 
-class Student(Base):
-    __tablename__ = "students"
+const userSchema = new mongoose.Schema(
+  {
+    name:     { type: String, required: true, trim: true },
+    email:    { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 6 },
+    phone:    { type: String, default: "" },
+    address:  { type: String, default: "" },
+    role:     { type: String, enum: ["user", "admin"], default: "user" },
+  },
+  { timestamps: true }
+);
 
-    id          = Column(Integer, primary_key=True, index=True)
-    student_id  = Column(String, unique=True, index=True, nullable=False)  # e.g. "S2024001"
-    name        = Column(String, nullable=False)
-    department  = Column(String, nullable=False)
-    year        = Column(Integer, nullable=False)
-    email       = Column(String, unique=True, nullable=True)
-    photo_path  = Column(String, nullable=True)          # path to stored photo
-    encoding    = Column(LargeBinary, nullable=True)     # pickled face encoding
-    created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
 
-    attendances = relationship("Attendance", back_populates="student")
+userSchema.methods.matchPassword = function (entered) {
+  return bcrypt.compare(entered, this.password);
+};
 
-    def __repr__(self):
-        return f"<Student {self.student_id} - {self.name}>"
+module.exports = mongoose.model("User", userSchema);
